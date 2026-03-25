@@ -1,0 +1,22 @@
+# Example training config — copy to models/tactical_policy_config.yaml locally (gitignored).
+algo: dqn
+episodes: 400
+lr: 0.001
+gamma: 0.99
+epsilon_start: 0.3
+epsilon_end: 0.05
+epsilon_decay_episodes: 300
+batch_size: 64
+replay_size: 10_000
+target_update_every: 50
+horizon: 40
+target_range:
+  min: -20
+  max: 20
+spread_range:
+  min: 1.0
+  max: 8.0
+vol_range:
+  min: 0.2
+  max: 2.0
+seed: 42

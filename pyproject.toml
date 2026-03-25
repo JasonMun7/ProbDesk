@@ -1,0 +1,79 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "prob-desk"
+version = "0.1.5"
+description = "Prob Desk — Kalshi + Google ADK + Gemini"
+license = "MIT"
+authors = ["Jason Mun <JasonMun7@users.noreply.github.com>"]
+homepage = "https://github.com/JasonMun7/ProbDesk"
+documentation = "https://github.com/JasonMun7/ProbDesk#readme"
+readme = "README.md"
+repository = "https://github.com/JasonMun7/ProbDesk"
+keywords = [
+    "kalshi",
+    "prediction markets",
+    "google-adk",
+    "gemini",
+    "multi-agent",
+    "llm",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+packages = [{ include = "prob_desk" }]
+
+[tool.poetry.scripts]
+prob-desk = "prob_desk.cli:main"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+rich = "*"
+pydantic = "*"
+loguru = "*"
+httpx = "*"
+kalshi-python-sync = ">=3.0.0"
+python-dotenv = "*"
+google-adk = ">=1.0.0"
+numpy = ">=1.24.0"
+torch = ">=2.1.0"
+pyyaml = ">=6.0.0"
+
+
+[tool.poetry.group.execution.dependencies]
+onnx = ">=1.16.0"
+onnxruntime = ">=1.16.0"
+
+[tool.poetry.group.lint.dependencies]
+ruff = ">=0.1.6,<0.15.0"
+types-toml = "^0.10.8.1"
+types-redis = "^4.3.21.6"
+types-pytz = "^2023.3.0.0"
+black = "^23.1.0"
+types-chardet = "^5.0.4.6"
+mypy-protobuf = "^3.0.0"
+
+
+[tool.autopep8]
+max_line_length = 80
+ignore = "E501,W6"
+in-place = true
+recursive = true
+aggressive = 3
+
+
+[tool.ruff]
+line-length = 70
+
+[tool.black]
+line-length = 70
+target-version = ['py310']
+preview = true

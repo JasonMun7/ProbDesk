@@ -1,0 +1,10 @@
+# Conda environment for Prob Desk (from repo root: conda env create -f environment.yml)
+name: prob-desk
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10,<3.14
+  - pip
+  - pip:
+      # Editable install pulls versions from pyproject.toml
+      - -e .
