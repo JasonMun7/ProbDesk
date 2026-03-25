@@ -168,7 +168,7 @@ Details: [`docs/tactical-policy-cli-scripts.md`](docs/tactical-policy-cli-script
 | ADK agent graph, delegation, tools | [`docs/adk-agents-architecture.md`](docs/adk-agents-architecture.md) |
 | Execution simulator package | [`docs/execution-simulator-package.md`](docs/execution-simulator-package.md) |
 | ADK dev workflow (this repo) | [`.cursor/rules/adk-development.mdc`](.cursor/rules/adk-development.mdc) |
-| Renaming from AutoHedge | Package is `prob_desk`, CLI is `prob-desk`, class is `ProbDesk` |
+| Package / CLI names | Package is `prob_desk`, CLI is `prob-desk`, class is `ProbDesk` |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
