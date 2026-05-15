@@ -182,3 +182,7 @@ cython_debug/
 
 # Kalshi private key
 secrets/
+
+# Miscellaneous
+CS 4701 Project Proposal.pdf
+Project Expectations.pdf
