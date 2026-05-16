@@ -1,0 +1,42 @@
+/* CopilotKit welcome / empty state — Prob Desk tokens */
+.copilotKitSidebar [data-testid="copilot-welcome-screen"] {
+  padding-top: 0.5rem;
+}
+
+.copilotKitSidebar .pd-desk-copilot-welcome {
+  max-width: 22rem;
+  margin-inline: auto;
+  padding-inline: 0.5rem;
+}
+
+.copilotKitSidebar [data-testid="copilot-welcome-screen"] [data-testid="copilot-suggestions"] {
+  display: none;
+}
+
+.copilotKitSidebar .pd-desk-copilot-welcome h1 {
+  letter-spacing: -0.02em;
+}
+
+.copilotKitSidebar .pd-desk-copilot-welcome button:not(:disabled) {
+  cursor: pointer;
+}
+
+.copilotKitSidebar .pd-desk-copilot-welcome button:disabled {
+  cursor: not-allowed;
+}
+
+.copilotKitSidebar .pd-desk-copilot-welcome button:focus-visible {
+  outline: 2px solid var(--pd-accent);
+  outline-offset: 2px;
+}
+
+/* CopilotKit v2 chrome inside sidebar (send, icon buttons, etc.) */
+.copilotKitSidebar[data-copilotkit] button:not(:disabled),
+[data-copilotkit] button:not(:disabled) {
+  cursor: pointer;
+}
+
+.copilotKitSidebar[data-copilotkit] button:disabled,
+[data-copilotkit] button:disabled {
+  cursor: not-allowed;
+}

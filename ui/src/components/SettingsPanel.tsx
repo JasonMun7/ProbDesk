@@ -1,7 +1,10 @@
 "use client";
 
+import { AgentPhoneSetupSection } from "@/components/AgentPhoneSetupSection";
 import { ProbDeskViewHeader } from "@/components/ProbDeskViewHeader";
 import { COPILOT_AGENT_ID } from "@/lib/constants";
+import type { ConfigStatus } from "@/lib/config-status-types";
+import { requestShowOnboarding } from "@/lib/onboarding-storage";
 import {
   CheckCircle2,
   CircleDashed,
@@ -11,30 +14,11 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-type ConfigStatus = {
-  kalshi: {
-    apiKeyId: boolean;
-    privateKey: boolean;
-    configured: boolean;
-  };
-  agent: {
-    googleApiKey: boolean;
-    aguiUrl: string;
-  };
-  agentphone: {
-    configured: boolean;
-  };
-  copilot: {
-    runtimeUrl: string;
-    agentId: string;
-    mcpApps: boolean;
-  };
-  version: string;
-};
-
 export function SettingsPanel() {
   const [status, setStatus] = useState<ConfigStatus | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [agentIdInput, setAgentIdInput] = useState("");
+  const [agentNameInput, setAgentNameInput] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -43,7 +27,17 @@ export function SettingsPanel() {
         const res = await fetch("/api/config-status");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = (await res.json()) as ConfigStatus;
-        if (!cancelled) setStatus(data);
+        if (!cancelled) {
+          setStatus(data);
+          const fromFile =
+            data.agentphone.agentIdSource === "file"
+              ? data.agentphone.agentId ?? ""
+              : "";
+          setAgentIdInput(fromFile);
+          if (data.agentphone.agentName) {
+            setAgentNameInput(data.agentphone.agentName);
+          }
+        }
       } catch {
         if (!cancelled) {
           setLoadError("Could not load server config status.");
@@ -129,14 +123,36 @@ export function SettingsPanel() {
 
         <SettingsSection
           title="AgentPhone"
-          description="Optional SMS via AgentPhone MCP on the trading director."
+          description="Optional SMS via AgentPhone MCP on the trading director. API key in .env; agent ID here or in .env."
         >
-          <ConfigRow
-            label="AGENTPHONE_API_KEY"
-            hint="Voice/SMS from agentphone.to — use the desk AgentPhone form or chat."
-            configured={status?.agentphone.configured}
+          <AgentPhoneSetupSection
+            status={status?.agentphone}
             loading={!status && !loadError}
-            optional
+            agentIdInput={agentIdInput}
+            agentNameInput={agentNameInput}
+            onAgentIdChange={setAgentIdInput}
+            onAgentNameChange={setAgentNameInput}
+            onSaved={(agentId, agentName) => {
+              if (agentName) setAgentNameInput(agentName);
+              setStatus((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      agentphone: {
+                        ...prev.agentphone,
+                        agentId,
+                        agentIdConfigured: !!agentId,
+                        agentIdSource: agentId ? "file" : null,
+                        agentName: agentName ?? prev.agentphone.agentName,
+                        smsReady:
+                          (prev.agentphone.apiKeyConfigured ??
+                            prev.agentphone.configured) &&
+                          !!agentId,
+                      },
+                    }
+                  : prev,
+              );
+            }}
           />
         </SettingsSection>
 
@@ -161,6 +177,19 @@ export function SettingsPanel() {
             loading={!status && !loadError}
             optional
           />
+        </SettingsSection>
+
+        <SettingsSection title="Setup" description="First-time configuration checklist">
+          <p className="text-sm text-pd-ink/70">
+            Re-open the Get Started modal to review required and optional credentials.
+          </p>
+          <button
+            type="button"
+            onClick={() => requestShowOnboarding()}
+            className="mt-3 text-sm font-medium text-pd-accent hover:underline"
+          >
+            Run setup checklist again
+          </button>
         </SettingsSection>
 
         <SettingsSection title="About" description="ProbDesk web UI">

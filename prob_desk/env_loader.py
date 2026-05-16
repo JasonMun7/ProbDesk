@@ -27,6 +27,10 @@ def load_env() -> None:
         load_dotenv()
     os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "false")
 
+    from prob_desk.desk_settings import apply_desk_settings_to_env
+
+    apply_desk_settings_to_env()
+
 
 def require_google_api_key() -> bool:
     """Return True if GOOGLE_API_KEY is set (required for Gemini via ADK)."""

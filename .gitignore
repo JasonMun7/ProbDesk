@@ -164,6 +164,9 @@ Thumbs.db
 .env.development
 .env.production
 
+# Local desk settings (AgentPhone agent ID, etc.)
+.prob-desk/
+
 # Environments
 .env
 .venv

@@ -1,3 +1,4 @@
+import { DESK_AGENTPHONE_SMS_SUGGESTION } from "@/lib/desk-agentphone";
 import type { DeskSnapshot } from "@/lib/desk-tool-state";
 import {
   marketsFromResult,
@@ -88,7 +89,15 @@ const DEFAULT: DeskFollowUp[] = [
     title: "Summarize risk",
     message: "Summarize my desk risk given what you know so far.",
   },
+  DESK_AGENTPHONE_SMS_SUGGESTION,
 ];
+
+function withSmsFollowUp(items: DeskFollowUp[]): DeskFollowUp[] {
+  if (items.some((item) => item.title === DESK_AGENTPHONE_SMS_SUGGESTION.title)) {
+    return items;
+  }
+  return [...items, DESK_AGENTPHONE_SMS_SUGGESTION];
+}
 
 function tickerFromSnapshot(latest: DeskSnapshot): string | undefined {
   const fromArgs = latest.args?.ticker ?? latest.args?.market_ticker;
@@ -107,7 +116,7 @@ export function deskFollowUpsForContext(
   latest: DeskSnapshot | null,
 ): DeskFollowUp[] {
   if (!latest?.tool) {
-    return DEFAULT;
+    return withSmsFollowUp(DEFAULT);
   }
 
   const tool = latest.tool;
@@ -122,7 +131,7 @@ export function deskFollowUpsForContext(
 
     if (top?.ticker) {
       const label = top.title?.trim() || top.ticker;
-      return [
+      return withSmsFollowUp([
         {
           title: "Orderbook",
           message: `Show the orderbook for ${top.ticker}.`,
@@ -136,26 +145,26 @@ export function deskFollowUpsForContext(
           message:
             "Call kalshi_sdk_get_balance and kalshi_sdk_get_positions for my portfolio.",
         },
-      ];
+      ]);
     }
 
     if (query) {
-      return [
+      return withSmsFollowUp([
         {
           title: "Refine search",
           message: `Search Kalshi again for "${query}" with status open.`,
         },
         ...SEARCH.slice(1),
-      ];
+      ]);
     }
 
-    return SEARCH;
+    return withSmsFollowUp(SEARCH);
   }
 
   if (ORDERBOOK_TOOLS.has(tool)) {
     const ticker = tickerFromSnapshot(latest);
     if (ticker) {
-      return [
+      return withSmsFollowUp([
         {
           title: "Spread & liquidity",
           message: `Summarize spread and liquidity on the orderbook for ${ticker}.`,
@@ -168,14 +177,14 @@ export function deskFollowUpsForContext(
           title: "Related markets",
           message: `Search Kalshi for markets related to ${ticker}.`,
         },
-      ];
+      ]);
     }
-    return ORDERBOOK;
+    return withSmsFollowUp(ORDERBOOK);
   }
 
   if (PORTFOLIO_TOOLS.has(tool)) {
     if (tool === "kalshi_sdk_get_balance") {
-      return [
+      return withSmsFollowUp([
         {
           title: "Open positions",
           message: "Show my open positions with kalshi_sdk_get_positions.",
@@ -189,10 +198,10 @@ export function deskFollowUpsForContext(
           title: "Search to trade",
           message: "Search Kalshi for a market I can trade.",
         },
-      ];
+      ]);
     }
     if (tool === "kalshi_sdk_get_positions") {
-      return [
+      return withSmsFollowUp([
         {
           title: "Cash balance",
           message: "What's my cash balance? Use kalshi_sdk_get_balance.",
@@ -206,18 +215,18 @@ export function deskFollowUpsForContext(
           title: "Search to trade",
           message: "Search Kalshi for a market I can trade.",
         },
-      ];
+      ]);
     }
-    return PORTFOLIO;
+    return withSmsFollowUp(PORTFOLIO);
   }
 
   if (tool === "kalshi_sdk_get_orders") {
-    return ORDERS;
+    return withSmsFollowUp(ORDERS);
   }
 
   const ticker = tickerFromSnapshot(latest);
   if (ticker) {
-    return [
+    return withSmsFollowUp([
       {
         title: "Orderbook",
         message: `Show the orderbook for ${ticker}.`,
@@ -231,10 +240,10 @@ export function deskFollowUpsForContext(
         title: "Summarize risk",
         message: "Summarize my desk risk given what you know so far.",
       },
-    ];
+    ]);
   }
 
-  return DEFAULT;
+  return withSmsFollowUp(DEFAULT);
 }
 
 /** @deprecated Use {@link deskFollowUpsForContext} */

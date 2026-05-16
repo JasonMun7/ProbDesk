@@ -59,6 +59,23 @@ prob-desk web   # same as cd ui && npm run dev
 
 ---
 
+## Web desk features
+
+| Area | What you get |
+|------|----------------|
+| **CopilotKit desk** | Chat with the `trading_director` ADK agent; tool calls stream in the sidebar |
+| **Generative panels** | Kalshi search, order book, portfolio, and trade receipts render in the center panel |
+| **HITL trading** | `approve_kalshi_order` — Approve / Deny in chat before execution |
+| **Chat welcome** | Starter suggestions and follow-ups tuned to desk workflows |
+| **Thread history** | New chat, switch threads, delete — persisted in the browser |
+| **Get Started** | Onboarding modal for first-time setup |
+| **Settings** | Kalshi API, Google key, and AgentPhone status (reads repo-root `.env` + local desk settings) |
+| **Help** | `?` in the desk header — shortcuts and demo prompts |
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
+
 ## Kalshi demo account
 
 Public search and order books work against the **demo API** without keys. For **portfolio, orders, and live execution**, create **demo** API credentials and add them to `.env`.
@@ -69,6 +86,21 @@ Public search and order books work against the **demo API** without keys. For **
 | 2 | Save your RSA private key as `secrets/kalshi/private_key.pem` (see [`secrets/kalshi/README.md`](secrets/kalshi/README.md)) |
 | 3 | Set `KALSHI_API_KEY_ID`, `KALSHI_PRIVATE_KEY_PATH`, and keep `KALSHI_TRADE_API_BASE` on the **demo** host |
 | 4 | Restart the agent (`cd ui && npm run dev`) and confirm **Settings → Kalshi API → Connected** |
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
+
+## AgentPhone (optional)
+
+Voice / SMS via [AgentPhone](https://agentphone.to) MCP tools on the trading director.
+
+| Config | Where |
+|--------|--------|
+| `AGENTPHONE_API_KEY` | `.env` at repo root |
+| Agent ID (`agt_…`) | **Settings → AgentPhone** (saved under `.prob-desk/desk-settings.json`, gitignored) |
+
+Use the **[Kalshi demo setup slides](https://docs.google.com/presentation/d/e/2PACX-1vRvhUAqRBYzJmt7JCinMXmu6KVWkj-cc7ikDXGConmqjcv4mnlJacgHPcZJ20fWWnrYdubn-oczclKP/pub?start=false&loop=false&delayms=3000&slide=id.g359756fc63c_5_25)** for demo API keys before wiring AgentPhone flows in the desk.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -85,7 +117,8 @@ Copy **`.env.example`** → **`.env`** at the **repo root** (the Next.js app loa
 | `KALSHI_API_KEY_ID` | For trading / portfolio | Authenticated Kalshi SDK |
 | `KALSHI_PRIVATE_KEY_PATH` | For trading / portfolio | Path to RSA PEM (see `secrets/kalshi/`) |
 | `KALSHI_TRADE_API_BASE` | — | Demo vs production API host |
-| `AGENTPHONE_API_KEY` | No | Voice / SMS via AgentPhone MCP |
+| `AGENTPHONE_API_KEY` | No | AgentPhone MCP |
+| `AGENTPHONE_AGENT_ID` | No | Optional in `.env`; prefer Settings UI |
 | `PROB_DESK_AGUI_URL` | No | Override AG-UI URL (default `http://127.0.0.1:8000/`) |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -96,7 +129,7 @@ Copy **`.env.example`** → **`.env`** at the **repo root** (the Next.js app loa
 
 | Mode | Command | Use when |
 |------|---------|----------|
-| **Web desk** | `cd ui && npm run dev` or `prob-desk web` | Primary UI — CopilotKit chat, generative Kalshi cards, trade approval |
+| **Web desk** | `cd ui && npm run dev` or `prob-desk web` | Primary UI — chat, generative panels, trade approval |
 | **AG-UI only** | `prob-desk serve` | Backend API for the UI (port 8000) |
 | **Terminal REPL** | `prob-desk` | Quick prompts without the browser |
 | **ADK Web** | `prob-desk adk` or `./scripts/run-adk-web.sh` | Stock Google ADK dev UI (port **8501**, not 8000) |
