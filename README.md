@@ -2,7 +2,7 @@
 
 <div align="center">
 
-  <img src="docs/logo.svg" width="96" height="96" alt="Prob Desk logo" />
+  <img src="ui/public/brand/logo.png" width="100" alt="Prob Desk" />
 
   # Prob Desk
 
@@ -156,7 +156,7 @@ pytest tests/ -v
 ProbDesk/
 ├── prob_desk/          # ADK agents, Kalshi tools, AG-UI server
 ├── ui/                 # Next.js + CopilotKit web desk
-├── docs/logo.svg       # README / brand mark
+├── ui/public/brand/    # Logo assets (same as web UI sidebar)
 ├── scripts/setup.sh    # One-shot local setup
 ├── .env.example
 └── DESIGN.md
