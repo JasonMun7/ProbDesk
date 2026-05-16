@@ -200,3 +200,7 @@ cython_debug/
 # Kalshi credentials (example PEM is committed; real key is not)
 secrets/kalshi/private_key.pem
 !secrets/kalshi/private_key.pem.example
+
+# Miscellaneous (local only)
+CS 4701 Project Proposal.pdf
+Project Expectations.pdf

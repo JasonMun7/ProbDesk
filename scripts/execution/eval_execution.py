@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare tactical policy vs baselines on synthetic episodes; write CSV/JSON under outputs/."""
+"""Compare tactical policy vs baselines on synthetic episodes."""
 
 from __future__ import annotations
 
@@ -18,13 +18,7 @@ from prob_desk.execution.rollout import load_q_network
 from prob_desk.execution.schemas import ExecutionEpisodeConfig
 
 
-def sample_cfg(
-    rng: np.random.Generator,
-    horizon: int,
-    target_range: tuple[int, int],
-    spread_range: tuple[float, float],
-    vol_range: tuple[float, float],
-) -> ExecutionEpisodeConfig:
+def sample_cfg(rng, horizon, target_range, spread_range, vol_range):
     lo, hi = target_range
     target = int(rng.integers(lo, hi + 1))
     if target == 0:
@@ -39,13 +33,13 @@ def sample_cfg(
     )
 
 
-def run_policy_episode(cfg: ExecutionEpisodeConfig, weights: Path) -> tuple[float, list[dict]]:
+def run_policy_episode(cfg, weights):
     env = KalshiExecEnv(cfg)
     obs, _ = env.reset()
     device = torch.device("cpu")
     q = load_q_network(weights, device=device)
     total_r = 0.0
-    logs: list[dict] = []
+    logs = []
     t = 0
     done = False
     while not done:
@@ -60,67 +54,48 @@ def run_policy_episode(cfg: ExecutionEpisodeConfig, weights: Path) -> tuple[floa
     return total_r, logs
 
 
-def main() -> None:
-    p = argparse.ArgumentParser(description="Eval tactical policy vs baselines.")
-    p.add_argument("--synthetic", action="store_true", help="Run synthetic sweep (default).")
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--synthetic", action="store_true")
     p.add_argument("--episodes", type=int, default=100)
     p.add_argument("--horizon", type=int, default=40)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--weights", type=Path, default=Path("models/tactical_policy.pt"))
     p.add_argument("--out-dir", type=Path, default=Path("outputs/kalshi_eval"))
-    p.add_argument("--train-fraction", type=float, default=0.7, help="Regime split for reporting.")
+    p.add_argument("--train-fraction", type=float, default=0.7)
     args = p.parse_args()
 
     rng = np.random.default_rng(args.seed)
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     if not args.weights.is_file():
-        print(
-            f"Missing weights at {args.weights}; "
-            "train with: python scripts/execution/train_tactical_policy.py"
-        )
+        print(f"Missing weights at {args.weights}")
         return
 
-    rows: list[dict] = []
-    shortfalls_policy: list[float] = []
-    shortfalls_baseline: dict[str, list[float]] = {k: [] for k in BASELINES}
+    rows = []
+    shortfalls_policy = []
+    shortfalls_baseline = {k: [] for k in BASELINES}
+    shortfalls_policy_by_regime = {"train": [], "test": []}
+    shortfalls_baseline_by_regime = {k: {"train": [], "test": []} for k in BASELINES}
 
     for i in range(args.episodes):
-        cfg = sample_cfg(
-            rng,
-            args.horizon,
-            (-20, 20),
-            (1.0, 8.0),
-            (0.2, 2.0),
-        )
+        cfg = sample_cfg(rng, args.horizon, (-20, 20), (1.0, 8.0), (0.2, 2.0))
         tag = "train" if i < int(args.train_fraction * args.episodes) else "test"
 
         _, logs_p = run_policy_episode(cfg, args.weights)
         sf_p = episode_shortfall_from_logs(logs_p, cfg.target_net_contracts)
         shortfalls_policy.append(sf_p)
-        rows.append(
-            {
-                "episode": i,
-                "regime": tag,
-                "method": "policy",
-                "shortfall_cents": sf_p,
-                "target": cfg.target_net_contracts,
-            }
-        )
+        shortfalls_policy_by_regime[tag].append(sf_p)
+        rows.append({"episode": i, "regime": tag, "method": "policy",
+                     "shortfall_cents": sf_p, "target": cfg.target_net_contracts})
 
         for name, fn in BASELINES.items():
             _, logs_b = fn(KalshiExecEnv(cfg.model_copy()))
             sf_b = episode_shortfall_from_logs(logs_b, cfg.target_net_contracts)
             shortfalls_baseline[name].append(sf_b)
-            rows.append(
-                {
-                    "episode": i,
-                    "regime": tag,
-                    "method": name,
-                    "shortfall_cents": sf_b,
-                    "target": cfg.target_net_contracts,
-                }
-            )
+            shortfalls_baseline_by_regime[name][tag].append(sf_b)
+            rows.append({"episode": i, "regime": tag, "method": name,
+                         "shortfall_cents": sf_b, "target": cfg.target_net_contracts})
 
     csv_path = args.out_dir / "episodes.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as f:
@@ -130,15 +105,20 @@ def main() -> None:
 
     summary = {
         "policy": summarize_shortfalls(shortfalls_policy).model_dump(),
-        "baselines": {
-            k: summarize_shortfalls(v).model_dump() for k, v in shortfalls_baseline.items()
+        "baselines": {k: summarize_shortfalls(v).model_dump() for k, v in shortfalls_baseline.items()},
+        "by_regime": {
+            regime: {
+                "policy": summarize_shortfalls(shortfalls_policy_by_regime[regime]).model_dump(),
+                "baselines": {
+                    k: summarize_shortfalls(shortfalls_baseline_by_regime[k][regime]).model_dump()
+                    for k in BASELINES
+                },
+            }
+            for regime in ("train", "test")
         },
     }
-    (args.out_dir / "summary.json").write_text(
-        json.dumps(summary, indent=2),
-        encoding="utf-8",
-    )
-    print(f"Wrote {csv_path} and {args.out_dir / 'summary.json'}")
+    (args.out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    print(f"Wrote {csv_path} and summary.json")
 
 
 if __name__ == "__main__":
