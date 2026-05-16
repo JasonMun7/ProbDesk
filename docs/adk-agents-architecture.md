@@ -13,7 +13,9 @@
 | **`root_agent`** | Python variable in [`prob_desk/agents/root_agent.py`](../prob_desk/agents/root_agent.py) — this is what you pass to **`Runner(agent=...)`**. One name for the graph entrypoint in code. |
 | **`trading_director`** | **`LlmAgent.name`** inside ADK — used for logs, UI, and **`transfer_to_agent(agent_name='quant_analyst')`**, etc. |
 | [`prob_desk/agents/prompts.py`](../prob_desk/agents/prompts.py) | Director + subagent prompt strings, **`GLOBAL_INSTRUCTION`**, **`DELEGATION_MARKDOWN`**, templates. |
-| [`prob_desk/agents/tools/__init__.py`](../prob_desk/agents/tools/__init__.py) | **`KALSHI_PUBLIC_TOOLS`**, **`KALSHI_TOOLS_READ`** (director/quant/risk), **`KALSHI_TOOLS`** (+ order writes for execution), **`TACTICAL_POLICY_TOOLS`** |
+| [`prob_desk/agents/tools/__init__.py`](../prob_desk/agents/tools/__init__.py) | **`KALSHI_PUBLIC_TOOLS`**, **`KALSHI_TOOLS_READ`** (director/quant/risk), **`KALSHI_TOOLS`** (+ order writes for execution), **`kalshi_get_live_quote`**, **`TACTICAL_POLICY_TOOLS`** |
+| [`prob_desk/agents/tools/agentphone_mcp.py`](../prob_desk/agents/tools/agentphone_mcp.py) | Optional **`get_agentphone_toolset()`** → AgentPhone **`McpToolset`** (Streamable HTTP) when **`AGENTPHONE_API_KEY`** is set |
+| [`prob_desk/agents/adk_app.py`](../prob_desk/agents/adk_app.py) | ADK **`App`** with **`ReflectAndRetryToolPlugin`** (Kalshi transient errors) — use for **`Runner`** and **`adk web`** via **`app`** export |
 | [`prob_desk/agents/tools/tactical_policy.py`](../prob_desk/agents/tools/tactical_policy.py) | **`suggest_execution_plan`** — greedy rollout of trained `models/tactical_policy.pt` |
 | [`prob_desk/execution/`](../prob_desk/execution/) | `prob_desk.execution` — sim env, baselines, metrics (not ADK agents) |
 
@@ -65,11 +67,19 @@ flowchart TB
 
 | `name` | Role | Kalshi tools |
 |--------|------|----------------|
-| `trading_director` | Orchestrate analysis; delegate via `transfer_to_agent` | Public HTTP + SDK (when configured) |
-| `quant_analyst` | Quant / probability analysis with market data | Public HTTP + SDK |
+| `trading_director` | Orchestrate analysis; delegate via `transfer_to_agent` | Public HTTP + SDK + optional **AgentPhone MCP** (calls/SMS). No **`google_search`** here—Gemini disallows mixing it with function tools; delegate to **`sentiment_agent`** for news. |
+| `quant_analyst` | Quant / probability analysis with market data | Public HTTP + SDK + **`kalshi_get_live_quote`** |
 | `risk_manager` | Sizing, drawdown, resolution / liquidity risk | Public HTTP + SDK portfolio reads (`kalshi_sdk_get_balance`, positions, orders) |
-| `execution_agent` | Order-style parameters; **RL tactical plan** + Kalshi grounding + **orders** | **`KALSHI_TOOLS`** (reads + `kalshi_sdk_create_order` / `kalshi_sdk_cancel_order`) + policy tools |
-| `sentiment_agent` | Sentiment from task text only | No |
+| `execution_agent` | Order-style parameters; **RL tactical plan** + Kalshi grounding + **orders** | **`KALSHI_TOOLS`** + policy tools (includes live quote) |
+| `sentiment_agent` | News / narrative sentiment | ADK **`google_search`** (Gemini grounding; uses **`GOOGLE_API_KEY`**) |
+
+## Runner plugins (reflect and retry)
+
+[`prob_desk/agents/runner_plugins.py`](../prob_desk/agents/runner_plugins.py) registers **`ProbDeskReflectAndRetryPlugin`** (`ReflectAndRetryToolPlugin`, `max_retries=3`). It retries tool failures when Kalshi tools return JSON **`error`** payloads (timeouts, 5xx) or raise exceptions. Wired via [`prob_desk/agents/adk_app.py`](../prob_desk/agents/adk_app.py) → **`prob_desk.agents.app`**; [`prob_desk/main.py`](../prob_desk/main.py) uses **`Runner(app=...)`**. For **`adk web`**, ensure the loader resolves **`app`** (exported from [`prob_desk/agents/__init__.py`](../prob_desk/agents/__init__.py)).
+
+## Live quotes (`kalshi_get_live_quote`)
+
+[`prob_desk/agents/tools/kalshi_stream.py`](../prob_desk/agents/tools/kalshi_stream.py): short WebSocket **`ticker`** subscription (2.5s cap) when Kalshi API keys are set; otherwise REST **`kalshi_get_orderbook`** top-of-book. WebSocket host tracks **`KALSHI_TRADE_API_BASE`** (demo → `external-api-ws.demo.kalshi.co`).
 
 ## TargetIntent JSON (for `suggest_execution_plan`)
 
@@ -102,3 +112,10 @@ Default setup uses **Google AI Studio** (`GOOGLE_API_KEY`). Set `GOOGLE_GENAI_US
 ## Kalshi: demo-first and credentials
 
 - Default Trade API base in `.env.example` is the **demo** host. **Authenticated** calls use the official **`kalshi-python-sync`** client (`KalshiClient` + RSA key); set `KALSHI_API_KEY_ID` and `KALSHI_PRIVATE_KEY_PATH` (or `KALSHI_PRIVATE_KEY_PEM`) for portfolio and order tools. Without credentials, SDK tools return a JSON error hint; **public** HTTP tools still work for market data.
+
+## AgentPhone MCP (optional)
+
+- Set **`AGENTPHONE_API_KEY`** in `.env` (see [agentphone.to](https://agentphone.to); key format `sk_live_...`). Loaded via [`prob_desk/env_loader.py`](../prob_desk/env_loader.py) on package import.
+- [`get_agentphone_toolset()`](../prob_desk/agents/tools/agentphone_mcp.py) returns **`None`** when the key is missing so **`from prob_desk.agents import root_agent`** and **`adk web`** work without AgentPhone.
+- When configured, only **`trading_director`** gets the toolset: **Streamable HTTP** to `https://mcp.agentphone.to/mcp` with `Authorization: Bearer <key>` (30s connect timeout). Alternative: stdio `npx -y agentphone-mcp` with the same env var (not used by default).
+- Prompts require **explicit user consent** before placing calls or sending SMS; subagents do not receive AgentPhone tools.

@@ -1,0 +1,206 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+@theme {
+  --color-pd-white: #ffffff;
+  --color-pd-bg: #e9fbff;
+  --color-pd-border: #bdf1ff;
+  --color-pd-accent: #3cc7e8;
+  --color-pd-ink: #115166;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  --pd-white: #ffffff;
+  --pd-bg: #e9fbff;
+  --pd-border: #bdf1ff;
+  --pd-accent: #3cc7e8;
+  --pd-ink: #115166;
+  --pd-ink-deep: #0d3d4d;
+
+  /* Brand gradients — see DESIGN.md */
+  --pd-gradient: linear-gradient(
+    135deg,
+    #0d3d4d 0%,
+    #115166 38%,
+    #1a8fad 72%,
+    #3cc7e8 100%
+  );
+  --pd-gradient-subtle: linear-gradient(
+    180deg,
+    #0f4a5c 0%,
+    #115166 52%,
+    #0d3d4d 100%
+  );
+  --pd-gradient-surface: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #f0fcff 55%,
+    #e9fbff 100%
+  );
+  --pd-gradient-accent: linear-gradient(
+    90deg,
+    #2eb8d9 0%,
+    #3cc7e8 48%,
+    #7ee0f4 100%
+  );
+  --pd-gradient-page: linear-gradient(
+    165deg,
+    #e9fbff 0%,
+    #f4fdff 45%,
+    #dff6fc 100%
+  );
+}
+
+body {
+  background: var(--pd-gradient-page);
+  color: var(--pd-ink);
+  min-height: 100dvh;
+}
+
+/* Prob Desk shell */
+.pd-sidebar-bg {
+  background: var(--pd-gradient-subtle);
+}
+
+.pd-accent-bar {
+  height: 2px;
+  background: var(--pd-gradient-accent);
+}
+
+@keyframes pd-desk-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pd-desk-fade-in {
+  animation: pd-desk-fade-in 0.35s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pd-desk-fade-in {
+    animation: none;
+  }
+}
+
+.pd-gradient-chip {
+  background: linear-gradient(
+    180deg,
+    var(--pd-white) 0%,
+    color-mix(in srgb, var(--pd-bg) 65%, var(--pd-white)) 100%
+  );
+}
+
+.pd-gradient-chip:hover:not(:disabled) {
+  background: linear-gradient(
+    180deg,
+    var(--pd-white) 0%,
+    var(--pd-bg) 100%
+  );
+  border-color: var(--pd-accent);
+}
+
+/* CopilotKit sidebar — pd tokens + v2 shadcn theme */
+.copilotKitSidebar[data-copilotkit] {
+  --copilot-kit-primary-color: var(--pd-accent);
+  --copilot-kit-contrast-color: var(--pd-ink);
+  --copilot-kit-secondary-contrast-color: var(--pd-ink);
+  --copilot-kit-background-color: var(--pd-white);
+  --copilot-kit-input-background-color: var(--pd-white);
+  --copilot-kit-secondary-color: var(--pd-bg);
+  --copilot-kit-separator-color: var(--pd-border);
+  --copilot-kit-muted-color: color-mix(in srgb, var(--pd-ink) 45%, transparent);
+
+  --background: var(--pd-white);
+  --foreground: var(--pd-ink);
+  --card: var(--pd-white);
+  --card-foreground: var(--pd-ink);
+  --popover: var(--pd-white);
+  --popover-foreground: var(--pd-ink);
+  --primary: var(--pd-accent);
+  --primary-foreground: var(--pd-ink);
+  --secondary: var(--pd-bg);
+  --secondary-foreground: var(--pd-ink);
+  --muted: var(--pd-bg);
+  --muted-foreground: color-mix(in srgb, var(--pd-ink) 62%, transparent);
+  --accent: var(--pd-border);
+  --accent-foreground: var(--pd-ink);
+  --border: var(--pd-border);
+  --input: var(--pd-border);
+  --ring: var(--pd-accent);
+}
+
+.copilotKitSidebar[data-copilotkit] {
+  background: var(--pd-gradient-surface) !important;
+  border-left-color: var(--pd-border) !important;
+  box-shadow: -4px 0 24px rgb(17 81 102 / 0.08);
+}
+
+.copilotKitSidebar [data-testid="copilot-modal-header"] {
+  position: relative;
+  border-bottom-color: var(--pd-border) !important;
+  background: color-mix(in srgb, var(--pd-white) 92%, var(--pd-bg)) !important;
+}
+
+.copilotKitSidebar [data-testid="copilot-modal-header"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--pd-gradient-accent);
+  opacity: 0.85;
+}
+
+.copilotKitSidebar [data-testid="copilot-header-title"] {
+  color: var(--pd-ink);
+  font-weight: 600;
+}
+
+.copilotKitSidebar [data-testid="copilot-header-title"] span {
+  color: inherit;
+  font-weight: inherit;
+}
+
+.copilotKitSidebar [data-testid="copilot-close-button"]:hover {
+  background: var(--pd-bg);
+  color: var(--pd-ink);
+}
+
+/* In-chat follow-up pills (DeskFollowUpSuggestions) */
+.copilotKitSidebar [data-testid="copilot-suggestion"] {
+  border-color: var(--pd-border);
+  background: var(--pd-gradient-chip);
+  color: var(--pd-ink);
+  font-size: 0.8125rem;
+  height: 2rem;
+  padding-inline: 0.75rem;
+  box-shadow: 0 1px 2px rgb(17 81 102 / 0.06);
+}
+
+.copilotKitSidebar [data-testid="copilot-suggestion"]:hover:not(:disabled) {
+  border-color: var(--pd-accent);
+  background: linear-gradient(180deg, var(--pd-white) 0%, var(--pd-bg) 100%);
+  color: var(--pd-ink);
+}
+
+.copilotKitSidebar [data-testid="copilot-suggestions"] {
+  pointer-events: auto;
+}
+
+[data-copilotkit] ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--pd-accent) 55%, var(--pd-ink));
+}
+
+[data-copilotkit] * {
+  scrollbar-color: color-mix(in srgb, var(--pd-accent) 55%, var(--pd-ink))
+    transparent;
+}

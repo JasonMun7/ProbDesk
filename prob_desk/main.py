@@ -11,7 +11,8 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from loguru import logger
 
-from prob_desk.agents import APP_NAME, DEFAULT_USER_ID, root_agent
+from prob_desk.agents import APP_NAME, DEFAULT_USER_ID
+from prob_desk.agents.adk_app import app as prob_desk_app
 
 
 def _suppress_genai_mixed_part_warning() -> None:
@@ -50,8 +51,7 @@ async def run_adk_task_async(task: str) -> str:
         state={},
     )
     runner = Runner(
-        app_name=APP_NAME,
-        agent=root_agent,
+        app=prob_desk_app,
         session_service=session_service,
         artifact_service=artifact_service,
     )
@@ -90,6 +90,8 @@ class ProbDesk:
         output_dir: str = "outputs",
         output_file_path: str = None,
         output_type: str = "list",
+        *,
+        verbose: bool = False,
     ):
         self.name = name
         self.description = description
@@ -97,14 +99,17 @@ class ProbDesk:
         self.output_file_path = output_file_path
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
+        self._verbose = verbose
 
-        logger.info("Initializing Prob Desk (ADK + Gemini)")
+        log = logger.info if self._verbose else logger.debug
+        log("Initializing Prob Desk (ADK + Gemini)")
 
     def run(self, task: str, *args, **kwargs):
         """
         Execute one agent run and return conversation-shaped output.
         """
-        logger.info("Starting ADK trading cycle")
+        log = logger.info if self._verbose else logger.debug
+        log("Starting ADK trading cycle")
         try:
             output_text = asyncio.run(run_adk_task_async(task))
             if self.output_type == "list":
