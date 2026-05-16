@@ -22,16 +22,9 @@ import {
 import { formatCents, parseToolJson } from "@/lib/parse-tool-result";
 import { useDeskToolState } from "@/lib/desk-tool-state";
 import { useResolvedToolResult } from "@/lib/use-resolved-tool-result";
+import { getKalshiToolIcon } from "@/lib/kalshi-tool-icons";
 import { useEffect, useMemo } from "react";
-import {
-  ArrowLeftRight,
-  BookOpen,
-  CheckCircle2,
-  LayoutDashboard,
-  Loader2,
-  Search,
-  Wallet,
-} from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 export type DeskChatToolCardProps = {
@@ -41,14 +34,6 @@ export type DeskChatToolCardProps = {
   result?: unknown;
   toolCallId?: string;
 };
-
-function toolIcon(name: string) {
-  if (PORTFOLIO_TOOLS.has(name)) return Wallet;
-  if (SEARCH_TOOLS.has(name)) return Search;
-  if (ORDERBOOK_TOOLS.has(name)) return BookOpen;
-  if (ORDER_EXECUTION_TOOLS.has(name)) return ArrowLeftRight;
-  return LayoutDashboard;
-}
 
 function runningSubtitle(
   name: string,
@@ -132,7 +117,7 @@ function ToolCardShell({
   const running = isDeskToolRunning(status) || Boolean(awaitingResult);
   const complete =
     isDeskToolComplete(status) && !awaitingResult;
-  const Icon = toolIcon(name);
+  const Icon = getKalshiToolIcon(name);
   const subtitle = running
     ? runningSubtitle(name, args)
     : complete

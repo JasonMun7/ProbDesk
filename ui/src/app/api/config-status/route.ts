@@ -1,5 +1,9 @@
 import { COPILOT_AGENT_ID } from "@/lib/constants";
 import {
+  readDeskSettingsFile,
+  resolveAgentPhoneAgentId,
+} from "@/lib/server-desk-settings";
+import {
   envPresent,
   kalshiConfigured,
   kalshiPrivateKeyConfigured,
@@ -12,6 +16,9 @@ export async function GET() {
 
   const kalshiApiKeyId = envPresent("KALSHI_API_KEY_ID");
   const kalshiPrivateKey = kalshiPrivateKeyConfigured();
+  const agentphoneAgent = resolveAgentPhoneAgentId();
+  const agentphoneApiKey = envPresent("AGENTPHONE_API_KEY");
+  const deskFile = readDeskSettingsFile();
 
   return NextResponse.json({
     kalshi: {
@@ -24,7 +31,13 @@ export async function GET() {
       aguiUrl: process.env.PROB_DESK_AGUI_URL?.trim() || "http://127.0.0.1:8000/",
     },
     agentphone: {
-      configured: envPresent("AGENTPHONE_API_KEY"),
+      apiKeyConfigured: agentphoneApiKey,
+      configured: agentphoneApiKey,
+      agentId: agentphoneAgent.agentId,
+      agentIdConfigured: !!agentphoneAgent.agentId,
+      agentIdSource: agentphoneAgent.source,
+      smsReady: agentphoneApiKey && !!agentphoneAgent.agentId,
+      agentName: deskFile.agentphoneAgentName ?? null,
     },
     copilot: {
       runtimeUrl: "/api/copilotkit",

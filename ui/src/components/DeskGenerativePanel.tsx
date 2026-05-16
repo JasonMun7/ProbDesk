@@ -8,6 +8,10 @@ import { useDeskToolState } from "@/lib/desk-tool-state";
 import { DESK_STARTER_ACTIONS, useDeskPrompt } from "@/lib/desk-prompt";
 import { isDeskToolRunning } from "@/lib/desk-tool-status";
 import {
+  getKalshiPortfolioPanelIcon,
+  getKalshiToolIcon,
+} from "@/lib/kalshi-tool-icons";
+import {
   EXECUTION_DESK_TOOLS,
   formatDeskTime,
   humanToolName,
@@ -18,14 +22,7 @@ import {
   SEARCH_TOOLS,
   shouldShowExecutionDeskPanel,
 } from "@/lib/kalshi-tool-parsers";
-import {
-  AlertCircle,
-  ArrowLeftRight,
-  BookOpen,
-  LayoutDashboard,
-  Search,
-  Wallet,
-} from "lucide-react";
+import { AlertCircle, LayoutDashboard } from "lucide-react";
 
 export function DeskGenerativePanel() {
   const { latest, balance, positions, execution } = useDeskToolState();
@@ -44,11 +41,12 @@ export function DeskGenerativePanel() {
   if (execSnap && shouldShowExecutionDeskPanel(execSnap, latest)) {
     const execRunning = isDeskToolRunning(execSnap.status);
     const isCancel = execSnap.tool === "kalshi_sdk_cancel_order";
+    const ExecIcon = getKalshiToolIcon(execSnap.tool);
 
     return (
       <DeskSection
         key={`execution-${execSnap.at}`}
-        icon={<ArrowLeftRight className="h-5 w-5" />}
+        icon={<ExecIcon className="h-5 w-5" aria-hidden />}
         title={isCancel ? "Order cancellation" : "Executed trade"}
         subtitle={
           String(execSnap.args?.ticker ?? "") || undefined
@@ -71,11 +69,12 @@ export function DeskGenerativePanel() {
   if (SEARCH_TOOLS.has(tool)) {
     const search = parseSearchResult(latest?.result);
     const query = String(latest?.args?.query ?? search.query ?? "");
+    const SearchIcon = getKalshiToolIcon(tool);
 
     return (
       <DeskSection
         key={panelKey}
-        icon={<Search className="h-5 w-5" />}
+        icon={<SearchIcon className="h-5 w-5" aria-hidden />}
         title="Market search"
         subtitle={query ? `“${query}”` : undefined}
         tool={tool}
@@ -111,11 +110,12 @@ export function DeskGenerativePanel() {
         "—",
     );
     const book = parseOrderbook(latest?.result);
+    const OrderbookIcon = getKalshiToolIcon(tool);
 
     return (
       <DeskSection
         key={panelKey}
-        icon={<BookOpen className="h-5 w-5" />}
+        icon={<OrderbookIcon className="h-5 w-5" aria-hidden />}
         title="Order book"
         subtitle={ticker}
         tool={tool}
@@ -144,11 +144,12 @@ export function DeskGenerativePanel() {
     const positionsResult =
       positions?.result ??
       (latest?.tool === "kalshi_sdk_get_positions" ? latest?.result : undefined);
+    const PortfolioIcon = getKalshiPortfolioPanelIcon(tool);
 
     return (
       <DeskSection
         key={panelKey}
-        icon={<Wallet className="h-5 w-5" />}
+        icon={<PortfolioIcon className="h-5 w-5" aria-hidden />}
         title="Portfolio"
         subtitle="Balance & positions"
         tool={tool || "kalshi_sdk_get_balance"}
@@ -167,10 +168,12 @@ export function DeskGenerativePanel() {
     );
   }
 
+  const GenericIcon = getKalshiToolIcon(tool);
+
   return (
     <DeskSection
       key={panelKey}
-      icon={<LayoutDashboard className="h-5 w-5" />}
+      icon={<GenericIcon className="h-5 w-5" aria-hidden />}
       title="Agent activity"
       tool={tool}
       updatedAt={updatedAt}

@@ -6,7 +6,8 @@ export type DeskDemoPrompt = {
   message: string;
 };
 
-export const DESK_CHAT_STARTERS: DeskDemoPrompt[] = [
+/** Welcome screen + header chips (portfolio, PGA search, risk). */
+export const DESK_WELCOME_STARTERS: DeskDemoPrompt[] = [
   {
     id: "portfolio",
     title: "Portfolio summary",
@@ -15,19 +16,23 @@ export const DESK_CHAT_STARTERS: DeskDemoPrompt[] = [
   },
   {
     id: "search",
-    title: "Search Scottie Scheffler PGA",
+    title: "Scottie Scheffler PGA",
     message: "Search Kalshi for Scottie Scheffler PGA",
-  },
-  {
-    id: "orderbook",
-    title: "Show orderbook",
-    message: "Show the orderbook for KXPGATOUR-PGC26-SSCH",
   },
   {
     id: "risk",
     title: "Risk summary",
     message:
       "Summarize my desk risk from live Kalshi portfolio data: call kalshi_sdk_get_balance and kalshi_sdk_get_positions, then transfer_to_agent(agent_name='risk_manager') for a portfolio-level risk summary. Ignore unrelated market searches.",
+  },
+];
+
+export const DESK_CHAT_STARTERS: DeskDemoPrompt[] = [
+  ...DESK_WELCOME_STARTERS,
+  {
+    id: "orderbook",
+    title: "Show orderbook",
+    message: "Show the orderbook for KXPGATOUR-PGC26-SSCH",
   },
 ];
 

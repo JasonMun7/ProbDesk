@@ -30,6 +30,7 @@ type DeskToolStateValue = {
   execution: DeskSnapshot | null;
   publish: (snap: Omit<DeskSnapshot, "at">) => void;
   schedulePublish: (snap: Omit<DeskSnapshot, "at">) => void;
+  reset: () => void;
 };
 
 const DeskToolStateContext = createContext<DeskToolStateValue | null>(null);
@@ -94,9 +95,26 @@ export function DeskToolStateProvider({ children }: { children: ReactNode }) {
     [flushPending],
   );
 
+  const reset = useCallback(() => {
+    pendingRef.current = [];
+    flushScheduledRef.current = false;
+    setLatest(null);
+    setBalance(null);
+    setPositions(null);
+    setExecution(null);
+  }, []);
+
   const value = useMemo(
-    () => ({ latest, balance, positions, execution, publish, schedulePublish }),
-    [latest, balance, positions, execution, publish, schedulePublish],
+    () => ({
+      latest,
+      balance,
+      positions,
+      execution,
+      publish,
+      schedulePublish,
+      reset,
+    }),
+    [latest, balance, positions, execution, publish, schedulePublish, reset],
   );
 
   return (

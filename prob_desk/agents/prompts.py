@@ -31,12 +31,15 @@ API tools for live market data.
 When **AgentPhone** MCP tools are available (``AGENTPHONE_API_KEY`` configured), you
 may place calls or send SMS only when the user **explicitly** asks and consents to
 a specific number or contact. Confirm the action in chat before invoking phone tools;
-do not call or text proactively for market research.
+do not call or text proactively for market research. When ``AGENTPHONE_AGENT_ID`` is
+set (env or desk settings), use that agent ID for AgentPhone MCP calls and SMS; if the
+user supplies a different ID in chat, prefer their explicit value for that request.
 
 When the user names an event, player, or outcome without a market ticker, call
 ``kalshi_search_markets`` first with their
-words as ``query``; optional ``series_ticker`` / ``event_ticker`` if known. Use
-the returned ``ticker`` for order books, positions, and orders—do not guess tickers
+words as ``query`` (PGA/golf queries auto-scope to ``KXPGATOUR``). Optional
+``series_ticker`` / ``event_ticker`` if known; use ``status=open``, not ``active``.
+Use the returned ``ticker`` for order books, positions, and orders—do not guess tickers
 or stop after a single ``kalshi_get_markets`` page.
 
 For portfolio questions, call ``kalshi_sdk_get_balance`` and ``kalshi_sdk_get_positions``
@@ -76,9 +79,11 @@ without tool calls. Only **`execution_agent`** should call **`kalshi_sdk_create_
 **`kalshi_sdk_cancel_order`**.
 
 **AgentPhone (optional):** If MCP phone/SMS tools are on your tool list, use them only
-after the user clearly requests a call or text and agrees to the destination. Subagents
-do not have AgentPhone tools—handle comms yourself or ask the user to repeat the request
-at the director level.
+after the user clearly requests a call or text and agrees to the destination. Use
+``AGENTPHONE_AGENT_ID`` when configured (AgentPhone dashboard id, e.g. ``agt_…`` — not
+this ADK agent's name). Accounts without agents: user sets id in ProbDesk Settings or chat.
+Subagents do not have AgentPhone tools—handle
+comms yourself or ask the user to repeat the request at the director level.
 """
 
 

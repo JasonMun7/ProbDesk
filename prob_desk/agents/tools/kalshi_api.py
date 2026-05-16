@@ -20,6 +20,30 @@ from loguru import logger
 
 DEFAULT_KALSHI_BASE = "https://demo-api.kalshi.co/trade-api/v2"
 
+_VALID_MARKET_STATUSES = frozenset({"unopened", "open", "closed", "settled"})
+# Kalshi market payloads use ``status: "active"``; listing filters use ``open``.
+_STATUS_FILTER_ALIASES = {"active": "open", "live": "open"}
+
+
+def normalize_market_status_filter(status: str) -> str:
+    """
+    Map user/LLM status strings to Kalshi ``GET /markets`` filter values.
+
+    Returns empty string to omit the filter (any status). Unknown values fall
+    back to ``open`` so we never send invalid filters (e.g. ``active`` → 400).
+    """
+    raw = status.strip().lower()
+    if not raw:
+        return ""
+    if raw in _STATUS_FILTER_ALIASES:
+        return _STATUS_FILTER_ALIASES[raw]
+    if raw in _VALID_MARKET_STATUSES:
+        return raw
+    logger.warning(
+        "Unknown Kalshi market status filter {!r}; using open", status
+    )
+    return "open"
+
 
 def _base_url() -> str:
     return os.getenv("KALSHI_TRADE_API_BASE", DEFAULT_KALSHI_BASE).rstrip(
@@ -53,8 +77,9 @@ def list_markets_page(
         params["series_ticker"] = series_ticker.strip()
     if event_ticker.strip():
         params["event_ticker"] = event_ticker.strip()
-    if status.strip():
-        params["status"] = status.strip()
+    normalized = normalize_market_status_filter(status)
+    if normalized:
+        params["status"] = normalized
     if limit and limit > 0:
         params["limit"] = min(limit, 1000)
     if cursor.strip():

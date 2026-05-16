@@ -2,6 +2,7 @@
 
 import { CopilotStyles } from "@/components/CopilotStyles";
 import { DeskCopilotFloatingLayout } from "@/components/DeskCopilotFloatingLayout";
+import { DeskChatThreadsSync } from "@/components/DeskChatThreadsSync";
 import { DeskAgentState } from "@/components/DeskAgentState";
 import { DeskAgentToolBridge } from "@/components/DeskAgentToolBridge";
 import { DeskHitl } from "@/components/DeskHitl";
@@ -37,6 +38,7 @@ export function CopilotRoot({ children }: { children: ReactNode }) {
       <DeskToolStateProvider>
         <KalshiToolRendering />
         <DeskAgentToolBridge />
+        <DeskChatThreadsSync />
         <KalshiDisplayComponents />
         <DeskHitl />
         <DeskAgentState />
