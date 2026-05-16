@@ -8,11 +8,14 @@ risk_agent = LlmAgent(
     name="risk_manager",
     model=GEMINI_MODEL,
     description=(
-        "Risk sizing, drawdown, exposure, and event-resolution risk for Kalshi "
-        "contracts. Route here after thesis and quant context exist."
+        "Desk/portfolio risk from live Kalshi balance and positions, or trade-level "
+        "sizing, drawdown, exposure, and resolution risk."
     ),
     instruction=RISK_PROMPT.strip()
-    + "\n\nWhen you receive a message, it will contain:\nStock, Thesis, Quant Analysis.\n\nProvide risk assessment including:\n1. Recommended position size\n2. Maximum drawdown risk\n3. Market risk exposure\n4. Overall risk score\n"
+    + "\n\nFor desk/portfolio summaries, use live Kalshi portfolio tools and report "
+    "exposure, concentration, and event risks. For trade requests with thesis/quant "
+    "context, also include: recommended position size, max drawdown, market risk "
+    "exposure, and overall risk score.\n"
     + "\nFor Kalshi contracts, include resolution/settlement and liquidity risk.\n"
     + SYSTEM_CONTEXT_SUFFIX,
     tools=list(KALSHI_PUBLIC_TOOLS) + list(KALSHI_SDK_PORTFOLIO_TOOLS),

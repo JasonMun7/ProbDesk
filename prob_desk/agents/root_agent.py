@@ -28,10 +28,18 @@ from prob_desk.agents.subagents import (
     sentiment_agent,
 )
 from prob_desk.agents.tools import KALSHI_TOOLS_READ
+from prob_desk.agents.tools.agentphone_mcp import get_agentphone_toolset
 
 _DIRECTOR_INSTRUCTION = (
     DIRECTOR_PROMPT + SYSTEM_CONTEXT_SUFFIX + "\n\n" + DELEGATION_MARKDOWN
 )
+
+# Gemini cannot mix built-in google_search with function-calling tools on one agent.
+# Use transfer_to_agent("sentiment_agent") for news / narrative search.
+_DIRECTOR_TOOLS: list = list(KALSHI_TOOLS_READ)
+_agentphone_toolset = get_agentphone_toolset()
+if _agentphone_toolset is not None:
+    _DIRECTOR_TOOLS.append(_agentphone_toolset)
 
 root_agent = LlmAgent(
     name="trading_director",
@@ -48,7 +56,7 @@ root_agent = LlmAgent(
         execution_agent,
         sentiment_agent,
     ],
-    tools=list(KALSHI_TOOLS_READ),
+    tools=_DIRECTOR_TOOLS,
 )
 
 __all__ = [

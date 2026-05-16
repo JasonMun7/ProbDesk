@@ -1,0 +1,36 @@
+{
+  "name": "prob-desk-ui",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:ui\" \"npm run dev:agent\" --names ui,agent --prefix-colors cyan,teal --kill-others",
+    "dev:ui": "next dev --port 3000",
+    "dev:agent": "bash scripts/run-agent.sh",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@ag-ui/client": "0.0.53",
+    "@copilotkit/react-core": "1.57.1",
+    "@copilotkit/react-ui": "1.57.1",
+    "@copilotkit/runtime": "1.57.1",
+    "katex": "^0.16.22",
+    "lucide-react": "^0.525.0",
+    "next": "15.3.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.25.75"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "concurrently": "^9.1.2",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

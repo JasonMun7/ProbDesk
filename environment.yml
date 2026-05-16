@@ -6,5 +6,5 @@ dependencies:
   - python>=3.10,<3.14
   - pip
   - pip:
-      # Editable install pulls versions from pyproject.toml
-      - -e .
+      # Editable install + [ui] extra (ag-ui-adk, fastapi, uvicorn for agui_server)
+      - -e ".[ui]"
