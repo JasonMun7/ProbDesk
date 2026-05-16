@@ -22,7 +22,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 .ruff_cache/
@@ -132,6 +132,21 @@ celerybeat.pid
 models/
 outputs/
 
+# Node (CopilotKit UI — see ui/.gitignore)
+ui/node_modules/
+ui/.next/
+ui/.env
+ui/.env.local
+ui/.env.*.local
+ui/out/
+ui/.turbo/
+ui/*.tsbuildinfo
+ui/npm-debug.log*
+ui/yarn-error.log*
+
+# Next / Vercel
+.vercel/
+
 # Google ADK CLI / dev (session DB; recreated locally)
 **/.adk/
 
@@ -146,6 +161,8 @@ Thumbs.db
 *~
 .env.local
 .env.*.local
+.env.development
+.env.production
 
 # Environments
 .env
@@ -180,9 +197,10 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# Kalshi private key
-secrets/
+# Kalshi credentials (example PEM is committed; real key is not)
+secrets/kalshi/private_key.pem
+!secrets/kalshi/private_key.pem.example
 
-# Miscellaneous
+# Miscellaneous (local only)
 CS 4701 Project Proposal.pdf
 Project Expectations.pdf

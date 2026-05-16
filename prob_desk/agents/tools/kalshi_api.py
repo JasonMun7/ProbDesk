@@ -32,6 +32,43 @@ def _path_segment(ticker: str) -> str:
     return quote(ticker.strip(), safe="-_.~")
 
 
+def list_markets_page(
+    *,
+    series_ticker: str = "",
+    event_ticker: str = "",
+    status: str = "open",
+    limit: int = 200,
+    cursor: str = "",
+) -> tuple[dict[str, Any], str | None]:
+    """
+    Fetch one page of ``GET /markets`` as a dict.
+
+    Returns
+    -------
+    (page_dict, error_message)
+        ``error_message`` is set when the HTTP call fails or JSON is invalid.
+    """
+    params: dict[str, Any] = {}
+    if series_ticker.strip():
+        params["series_ticker"] = series_ticker.strip()
+    if event_ticker.strip():
+        params["event_ticker"] = event_ticker.strip()
+    if status.strip():
+        params["status"] = status.strip()
+    if limit and limit > 0:
+        params["limit"] = min(limit, 1000)
+    if cursor.strip():
+        params["cursor"] = cursor.strip()
+    raw = _get("/markets", params=params or None)
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        return {}, str(e)
+    if isinstance(data, dict) and data.get("error"):
+        return data, str(data.get("error"))
+    return data if isinstance(data, dict) else {}, None
+
+
 def _get(
     path: str,
     *,
@@ -53,19 +90,22 @@ def _get(
 
 def kalshi_get_markets(
     series_ticker: str = "",
+    event_ticker: str = "",
     status: str = "open",
     limit: int = 50,
     cursor: str = "",
 ) -> str:
     """
-    List markets (paginated). Filter by series and status.
+    List markets (paginated). Filter by series, event, and status.
 
     Parameters
     ----------
     series_ticker
         e.g. KXHIGHNY. Empty string omits the filter.
+    event_ticker
+        e.g. KXPGATOUR-PGC26. Empty string omits the filter.
     status
-        One of: open, unopened, closed, settled, or empty for any.
+        One of: unopened, open, closed, settled, or empty for any.
     limit
         Page size (API typically allows up to 1000).
     cursor
@@ -76,16 +116,16 @@ def kalshi_get_markets(
     str
         JSON string with ``markets`` and optional ``cursor``.
     """
-    params: dict[str, Any] = {}
-    if series_ticker and series_ticker.strip():
-        params["series_ticker"] = series_ticker.strip()
-    if status and status.strip():
-        params["status"] = status.strip()
-    if limit and limit > 0:
-        params["limit"] = min(limit, 1000)
-    if cursor and cursor.strip():
-        params["cursor"] = cursor.strip()
-    return _get("/markets", params=params or None)
+    page, err = list_markets_page(
+        series_ticker=series_ticker,
+        event_ticker=event_ticker,
+        status=status,
+        limit=limit,
+        cursor=cursor,
+    )
+    if err and not page.get("markets"):
+        return json.dumps({"error": err, **page})
+    return json.dumps(page)
 
 
 def kalshi_get_market(market_ticker: str) -> str:

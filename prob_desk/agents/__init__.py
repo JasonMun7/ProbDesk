@@ -1,5 +1,6 @@
 """ADK LlmAgent graph (director + sub-agents) and runtime constants."""
 
+from prob_desk.agents.adk_app import app
 from prob_desk.agents.root_agent import (
     APP_NAME,
     DEFAULT_USER_ID,
@@ -15,6 +16,7 @@ __all__ = [
     "APP_NAME",
     "DEFAULT_USER_ID",
     "GEMINI_MODEL",
+    "app",
     "execution_agent",
     "quant_agent",
     "risk_agent",

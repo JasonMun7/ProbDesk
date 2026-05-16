@@ -12,10 +12,12 @@ import traceback
 from typing import Any
 
 from loguru import logger
+from pydantic import ValidationError
 
 from prob_desk.agents.tools.kalshi_sdk_client import get_kalshi_client
 
 from kalshi_python_sync.exceptions import ApiException
+from kalshi_python_sync.models.create_order_request import CreateOrderRequest
 
 
 def _auth_error_json() -> str:
@@ -57,8 +59,80 @@ def _api_err(exc: BaseException) -> str:
             out["status"] = status
         if body is not None:
             out["body"] = body
+    if isinstance(exc, ValidationError):
+        out["hint"] = (
+            "Kalshi API may have succeeded; SDK Order model failed to parse null "
+            "fields. Retry with updated tools or check balance/orders on the exchange."
+        )
     logger.error("Kalshi SDK error: {}\n{}", exc, traceback.format_exc())
     return json.dumps(out)
+
+
+def _rest_response_json(http_resp: Any) -> tuple[int, Any]:
+    """Parse urllib3 REST response body without SDK Order deserialization."""
+    status = int(getattr(http_resp, "status", 0) or 0)
+    raw = getattr(http_resp, "data", None)
+    if raw is None:
+        return status, None
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8")
+    if not str(raw).strip():
+        return status, None
+    return status, json.loads(raw)
+
+
+def _orders_api_raw(client: Any, method: str, **kwargs: Any) -> str:
+    """
+    Call OrdersApi *_without_preload_content and return raw JSON.
+
+    Workaround for kalshi-python-sync 3.x: API returns null ints on Order fields
+    that Pydantic models require as int.
+    """
+    api = client._orders_api
+    if method == "create_order":
+        http_resp = api.create_order_without_preload_content(
+            CreateOrderRequest(**kwargs)
+        )
+    elif method == "cancel_order":
+        order_id = kwargs.pop("order_id")
+        http_resp = api.cancel_order_without_preload_content(order_id)
+    else:
+        fn = getattr(api, f"{method}_without_preload_content")
+        http_resp = fn(**kwargs)
+    status, payload = _rest_response_json(http_resp)
+    if status >= 400:
+        return json.dumps(
+            {
+                "error": "Kalshi API error",
+                "status": status,
+                "body": payload,
+            }
+        )
+    return json.dumps(payload if payload is not None else {"status": status})
+
+
+def _call_orders(client: Any, method: str, **kwargs: Any) -> str:
+    """
+    Order endpoints use raw JSON only.
+
+    The typed SDK deserializes Order with required ints while the API returns null
+    for many fields. Calling create_order twice on ValidationError would duplicate
+    orders, so we never use the typed path for writes.
+    """
+    return _orders_api_raw(client, method, **kwargs)
+
+
+def _portfolio_api_raw(client: Any, method: str, **kwargs: Any) -> str:
+    """Raw JSON for portfolio endpoints with the same SDK null-int issue."""
+    api = client._portfolio_api
+    fn = getattr(api, f"{method}_without_preload_content")
+    http_resp = fn(**kwargs)
+    status, payload = _rest_response_json(http_resp)
+    if status >= 400:
+        return json.dumps(
+            {"error": "Kalshi API error", "status": status, "body": payload}
+        )
+    return json.dumps(payload if payload is not None else {"status": status})
 
 
 def kalshi_sdk_get_balance() -> str:
@@ -105,7 +179,7 @@ def kalshi_sdk_get_positions(
             kwargs["limit"] = min(count_limit, 1000)
         if cursor.strip():
             kwargs["cursor"] = cursor.strip()
-        return _ok(client.get_positions(**kwargs))
+        return _portfolio_api_raw(client, "get_positions", **kwargs)
     except Exception as e:  # noqa: BLE001
         return _api_err(e)
 
@@ -133,13 +207,14 @@ def kalshi_sdk_get_orders(
             kwargs["limit"] = min(count_limit, 200)
         if cursor.strip():
             kwargs["cursor"] = cursor.strip()
-        return _ok(client.get_orders(**kwargs))
+        return _call_orders(client, "get_orders", **kwargs)
     except Exception as e:  # noqa: BLE001
         return _api_err(e)
 
 
 def kalshi_sdk_get_markets(
     series_ticker: str = "",
+    event_ticker: str = "",
     status: str = "open",
     limit: int = 50,
     cursor: str = "",
@@ -152,6 +227,8 @@ def kalshi_sdk_get_markets(
         kwargs: dict[str, Any] = {}
         if series_ticker.strip():
             kwargs["series_ticker"] = series_ticker.strip()
+        if event_ticker.strip():
+            kwargs["event_ticker"] = event_ticker.strip()
         if status.strip():
             kwargs["status"] = status.strip()
         if limit and limit > 0:
@@ -267,7 +344,7 @@ def kalshi_sdk_create_order(
             kwargs["time_in_force"] = time_in_force.strip()
         if client_order_id.strip():
             kwargs["client_order_id"] = client_order_id.strip()
-        return _ok(client.create_order(**kwargs))
+        return _call_orders(client, "create_order", **kwargs)
     except Exception as e:  # noqa: BLE001
         return _api_err(e)
 
@@ -280,7 +357,7 @@ def kalshi_sdk_cancel_order(order_id: str) -> str:
     if not order_id.strip():
         return json.dumps({"error": "order_id is empty"})
     try:
-        return _ok(client.cancel_order(order_id.strip()))
+        return _call_orders(client, "cancel_order", order_id=order_id.strip())
     except Exception as e:  # noqa: BLE001
         return _api_err(e)
 
@@ -291,6 +368,8 @@ KALSHI_SDK_PORTFOLIO_TOOLS = [
     kalshi_sdk_get_orders,
 ]
 
+# Search is public-only (`kalshi_search_markets` in KALSHI_PUBLIC_TOOLS); do not alias it here—
+# Gemini rejects duplicate function declarations on the same agent.
 KALSHI_SDK_MARKET_TOOLS = [
     kalshi_sdk_get_markets,
     kalshi_sdk_get_market,

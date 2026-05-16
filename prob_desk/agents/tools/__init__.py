@@ -7,6 +7,8 @@ from prob_desk.agents.tools.kalshi_api import (
     kalshi_get_orderbook,
     kalshi_get_series,
 )
+from prob_desk.agents.tools.kalshi_search import kalshi_search_markets
+from prob_desk.agents.tools.kalshi_stream import kalshi_get_live_quote
 from prob_desk.agents.tools.kalshi_sdk_tools import (
     KALSHI_SDK_MARKET_TOOLS,
     KALSHI_SDK_ORDER_TOOLS,
@@ -27,23 +29,44 @@ from prob_desk.agents.tools.tactical_policy import TACTICAL_POLICY_TOOLS
 
 # Public (httpx) — no API key required.
 KALSHI_PUBLIC_TOOLS = [
+    kalshi_search_markets,
     kalshi_get_markets,
     kalshi_get_market,
     kalshi_get_orderbook,
     kalshi_get_series,
     kalshi_get_event,
+    kalshi_get_live_quote,
 ]
+
+KALSHI_STREAM_TOOLS = [kalshi_get_live_quote]
 
 # Authenticated reads (portfolio + markets) + public HTTP — for director / quant / risk.
 KALSHI_SDK_READ_TOOLS = list(KALSHI_SDK_PORTFOLIO_TOOLS) + list(KALSHI_SDK_MARKET_TOOLS)
 
-KALSHI_TOOLS_READ = list(KALSHI_PUBLIC_TOOLS) + KALSHI_SDK_READ_TOOLS
+
+def _dedupe_tools_by_name(tools: list) -> list:
+    """Gemini rejects duplicate function names on one agent."""
+    seen: set[str] = set()
+    out: list = []
+    for tool in tools:
+        name = getattr(tool, "__name__", None) or repr(tool)
+        if name in seen:
+            continue
+        seen.add(name)
+        out.append(tool)
+    return out
+
+
+KALSHI_TOOLS_READ = _dedupe_tools_by_name(
+    list(KALSHI_PUBLIC_TOOLS) + KALSHI_SDK_READ_TOOLS
+)
 
 # Adds create/cancel — for ``execution_agent`` only.
-KALSHI_TOOLS = KALSHI_TOOLS_READ + list(KALSHI_SDK_ORDER_TOOLS)
+KALSHI_TOOLS = _dedupe_tools_by_name(KALSHI_TOOLS_READ + list(KALSHI_SDK_ORDER_TOOLS))
 
 __all__ = [
     "KALSHI_PUBLIC_TOOLS",
+    "KALSHI_STREAM_TOOLS",
     "KALSHI_SDK_MARKET_TOOLS",
     "KALSHI_SDK_ORDER_TOOLS",
     "KALSHI_SDK_PORTFOLIO_TOOLS",
@@ -52,7 +75,9 @@ __all__ = [
     "KALSHI_TOOLS",
     "KALSHI_TOOLS_READ",
     "TACTICAL_POLICY_TOOLS",
+    "kalshi_search_markets",
     "kalshi_get_event",
+    "kalshi_get_live_quote",
     "kalshi_get_market",
     "kalshi_get_markets",
     "kalshi_get_orderbook",

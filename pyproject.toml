@@ -40,13 +40,28 @@ rich = "*"
 pydantic = "*"
 loguru = "*"
 httpx = "*"
+websockets = ">=12.0"
 kalshi-python-sync = ">=3.0.0"
 python-dotenv = "*"
 google-adk = ">=1.0.0"
+ag-ui-adk = { version = ">=0.6.3,<0.7.0", optional = true }
+fastapi = { version = ">=0.115.0", optional = true }
+uvicorn = { version = ">=0.32.0", extras = ["standard"], optional = true }
 numpy = ">=1.24.0"
 torch = ">=2.1.0"
 pyyaml = ">=6.0.0"
 
+
+[tool.poetry.extras]
+ui = ["ag-ui-adk", "fastapi", "uvicorn"]
+
+[tool.poetry.group.ui]
+optional = true
+
+[tool.poetry.group.ui.dependencies]
+ag-ui-adk = ">=0.6.3,<0.7.0"
+fastapi = ">=0.115.0"
+uvicorn = { version = ">=0.32.0", extras = ["standard"] }
 
 [tool.poetry.group.execution.dependencies]
 onnx = ">=1.16.0"
