@@ -1,6 +1,21 @@
 /* CopilotKit welcome / empty state — Prob Desk tokens */
+
+/* Default CopilotChatView welcome (fallback) */
 .copilotKitSidebar [data-testid="copilot-welcome-screen"] {
-  padding-top: 0.5rem;
+  justify-content: flex-start !important;
+  padding-top: 2.5rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Sidebar welcome: logo + chips above input (CopilotSidebarView.WelcomeScreen) */
+.copilotKitSidebar [data-sidebar-chat] .pd-desk-welcome-screen > div:first-child {
+  justify-content: flex-start !important;
+  align-items: center;
+  padding-top: 2.5rem;
+  padding-bottom: 0.75rem;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .copilotKitSidebar .pd-desk-copilot-welcome {
@@ -9,7 +24,8 @@
   padding-inline: 0.5rem;
 }
 
-.copilotKitSidebar [data-testid="copilot-welcome-screen"] [data-testid="copilot-suggestions"] {
+.copilotKitSidebar [data-testid="copilot-welcome-screen"] [data-testid="copilot-suggestions"],
+.copilotKitSidebar .pd-desk-welcome-screen [data-testid="copilot-suggestions"] {
   display: none;
 }
 

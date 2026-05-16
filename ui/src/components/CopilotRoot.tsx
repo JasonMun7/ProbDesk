@@ -3,6 +3,9 @@
 import { CopilotStyles } from "@/components/CopilotStyles";
 import { DeskCopilotFloatingLayout } from "@/components/DeskCopilotFloatingLayout";
 import { DeskChatThreadsSync } from "@/components/DeskChatThreadsSync";
+import { DeskChatOverlayHost } from "@/components/DeskChatOverlayHost";
+import { DeskChatThreadsProvider } from "@/hooks/use-desk-chat-threads";
+import { DeskChatOverlayProvider } from "@/lib/desk-chat-overlay";
 import { DeskAgentState } from "@/components/DeskAgentState";
 import { DeskAgentToolBridge } from "@/components/DeskAgentToolBridge";
 import { DeskHitl } from "@/components/DeskHitl";
@@ -36,13 +39,18 @@ export function CopilotRoot({ children }: { children: ReactNode }) {
       <DeskCopilotFloatingLayout />
       <CopilotStyles />
       <DeskToolStateProvider>
-        <KalshiToolRendering />
-        <DeskAgentToolBridge />
-        <DeskChatThreadsSync />
-        <KalshiDisplayComponents />
-        <DeskHitl />
-        <DeskAgentState />
-        {children}
+        <DeskChatThreadsProvider>
+          <DeskChatOverlayProvider>
+            <KalshiToolRendering />
+            <DeskAgentToolBridge />
+            <DeskChatThreadsSync />
+            <KalshiDisplayComponents />
+            <DeskHitl />
+            <DeskAgentState />
+            <DeskChatOverlayHost />
+            {children}
+          </DeskChatOverlayProvider>
+        </DeskChatThreadsProvider>
       </DeskToolStateProvider>
     </CopilotKit>
   );

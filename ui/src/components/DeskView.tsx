@@ -2,7 +2,6 @@
 
 import { DeskGenerativePanel } from "@/components/DeskGenerativePanel";
 import { DeskHelpModal } from "@/components/DeskHelpModal";
-import { DeskRunStatus } from "@/components/DeskRunStatus";
 import { ProbDeskViewHeader } from "@/components/ProbDeskViewHeader";
 import { CircleHelp } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -14,7 +13,6 @@ export function DeskView() {
 
   return (
     <>
-      <DeskRunStatus />
       <ProbDeskViewHeader
         title="Trading desk"
         subtitle="Live views from agent tools · chat on the right"

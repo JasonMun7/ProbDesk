@@ -6,6 +6,8 @@ export type DeskChatThreadMeta = {
   title: string;
   createdAt: string;
   updatedAt: string;
+  /** True after the user has sent at least one message in this thread. */
+  hasMessages: boolean;
 };
 
 export type DeskChatThreadsSnapshot = {
@@ -35,7 +37,8 @@ function parseThreadMeta(value: unknown): DeskChatThreadMeta | null {
   ) {
     return null;
   }
-  return { id, title, createdAt, updatedAt };
+  const hasMessages = value.hasMessages === true;
+  return { id, title, createdAt, updatedAt, hasMessages };
 }
 
 export function loadDeskChatThreads(): DeskChatThreadsSnapshot {
