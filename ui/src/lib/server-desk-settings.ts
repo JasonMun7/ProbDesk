@@ -1,4 +1,5 @@
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { getRepoRoot, loadRepoEnv } from "@/lib/server-env";
 
@@ -11,6 +12,10 @@ const SETTINGS_DIR = ".prob-desk";
 const SETTINGS_FILE = "desk-settings.json";
 
 function settingsPath(): string {
+  // Vercel serverless FS is ephemeral; use /tmp so writes do not fail at runtime.
+  if (process.env.VERCEL) {
+    return path.join(os.tmpdir(), "prob-desk", SETTINGS_FILE);
+  }
   return path.join(getRepoRoot(), SETTINGS_DIR, SETTINGS_FILE);
 }
 

@@ -2,6 +2,7 @@
 
 import { ProbDeskCopilotHeaderTitle } from "@/components/ProbDeskCopilotHeaderTitle";
 import { useDeskChatThreads } from "@/hooks/use-desk-chat-threads";
+import { useDeskChatOverlay } from "@/lib/desk-chat-overlay";
 import { defaultThreadTitle } from "@/lib/desk-chat-threads-storage";
 import {
   CopilotModalHeader,
@@ -16,10 +17,9 @@ export function DeskCopilotSidebarHeader({
   title?: string;
 }) {
   const configuration = useCopilotChatConfiguration();
-  const { threads, threadId, createThread, selectThread, deleteThread } =
-    useDeskChatThreads();
+  const { threads, threadId, createThread, selectThread } = useDeskChatThreads();
+  const { requestDeleteThread, cancelDelete } = useDeskChatOverlay();
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const handleClose = useCallback(() => {
     configuration?.setModalOpen(false);
@@ -27,35 +27,30 @@ export function DeskCopilotSidebarHeader({
 
   const toggleHistory = useCallback(() => {
     setHistoryOpen((open) => !open);
-    setPendingDeleteId(null);
-  }, []);
+    cancelDelete();
+  }, [cancelDelete]);
 
   const handleNewChat = useCallback(() => {
     createThread();
     setHistoryOpen(false);
-    setPendingDeleteId(null);
-  }, [createThread]);
+    cancelDelete();
+  }, [createThread, cancelDelete]);
 
   const handleSelect = useCallback(
     (id: string) => {
       selectThread(id);
       setHistoryOpen(false);
-      setPendingDeleteId(null);
+      cancelDelete();
     },
-    [selectThread],
+    [selectThread, cancelDelete],
   );
 
   const handleDeleteClick = useCallback(
-    (id: string, event: MouseEvent<HTMLButtonElement>) => {
+    (id: string, label: string, event: MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
-      if (pendingDeleteId === id) {
-        deleteThread(id);
-        setPendingDeleteId(null);
-        return;
-      }
-      setPendingDeleteId(id);
+      requestDeleteThread(id, label);
     },
-    [deleteThread, pendingDeleteId],
+    [requestDeleteThread],
   );
 
   return (
@@ -106,8 +101,6 @@ export function DeskCopilotSidebarHeader({
                 const isActive = thread.id === threadId;
                 const label =
                   thread.title || defaultThreadTitle(thread.createdAt);
-                const confirmDelete = pendingDeleteId === thread.id;
-
                 return (
                   <li key={thread.id}>
                     <div
@@ -131,18 +124,10 @@ export function DeskCopilotSidebarHeader({
                       </span>
                       <button
                         type="button"
-                        onClick={(e) => handleDeleteClick(thread.id, e)}
-                        className={`pd-chat-thread-delete${confirmDelete ? " pd-chat-thread-delete-confirm" : ""}`}
-                        title={
-                          confirmDelete
-                            ? "Click again to delete"
-                            : "Delete conversation"
-                        }
-                        aria-label={
-                          confirmDelete
-                            ? "Confirm delete conversation"
-                            : "Delete conversation"
-                        }
+                        onClick={(e) => handleDeleteClick(thread.id, label, e)}
+                        className="pd-chat-thread-delete"
+                        title="Delete conversation"
+                        aria-label="Delete conversation"
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden />
                       </button>
